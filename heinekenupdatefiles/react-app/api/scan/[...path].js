@@ -101,6 +101,10 @@ export default async function handler(req, res) {
   const segments = Array.isArray(req.query.path) ? req.query.path : req.query.path ? [req.query.path] : [];
   const [first, second] = segments;
 
+  if (req.query.__debug === '1') {
+    return res.status(200).json({ url: req.url, method: req.method, query: req.query, segments });
+  }
+
   if (first === 'login' && segments.length === 1) return handleLogin(req, res);
   if (first === 'logout' && segments.length === 1) return handleLogout(req, res);
   if (first === 'me' && segments.length === 1) return handleMe(req, res);
