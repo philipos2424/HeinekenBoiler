@@ -233,6 +233,10 @@ export default async function handler(req, res) {
   const segments = pathSegments(req, '/api/admin/');
   const [first, second, third] = segments;
 
+  if (req.query.__debug === '1') {
+    return res.status(200).json({ url: req.url, method: req.method, query: req.query, segments });
+  }
+
   // /login is the only public admin route — everything else needs a valid
   // admin session, checked once here before dispatching.
   if (first === 'login' && segments.length === 1) return handleLogin(req, res);

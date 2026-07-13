@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/gallery", "destination": "/index.html" },
     { "source": "/admin/:path*", "destination": "/index.html" },
-    { "source": "/scan/:path*", "destination": "/index.html" }
+    { "source": "/scan/:path*", "destination": "/index.html" },
+    { "source": "/api/admin/:path*", "destination": "/api/admin/router" },
+    { "source": "/api/scan/:path*", "destination": "/api/scan/router" }
   ]
 }
