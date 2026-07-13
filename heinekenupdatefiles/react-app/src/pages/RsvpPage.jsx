@@ -5,6 +5,7 @@ import Reveal from '../components/Reveal.jsx';
 import useCountdown from '../components/useCountdown.js';
 import useAmbientAudio from '../components/useAmbientAudio.js';
 import { makeBubbleStyles, LOADER_BUBBLE_COLORS, CHEER_BUBBLE_COLORS } from '../components/bubbles.js';
+import { apiPost } from '../lib/api.js';
 
 const LOGO = '/assets/heineken-ethiopia-logo.png';
 const TARGET = new Date(2026, 6, 28, 14, 0, 0).getTime();
@@ -19,6 +20,7 @@ export default function RsvpPage() {
   const [attending, setAttending] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const loaderBubbles = useMemo(() => makeBubbleStyles(16, LOADER_BUBBLE_COLORS, false), []);
   const cheerBubbles = useMemo(() => makeBubbleStyles(32, CHEER_BUBBLE_COLORS, true), []);
@@ -31,12 +33,29 @@ export default function RsvpPage() {
   const set = (k) => (e) => { setForm((f) => ({ ...f, [k]: e.target.value })); setError(''); };
   const choose = (v) => { setAttending(v); setError(''); };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!attending) return setError('Please let us know whether you can attend.');
     if (!form.name.trim()) return setError('Please enter your name.');
-    if (!EMAIL_RE.test(form.email)) return setError('Please enter a valid email address.');
+    if (!form.phone.trim()) return setError('Please enter your phone number.');
+    if (attending === 'yes' && !EMAIL_RE.test(form.email)) {
+      return setError('Please enter a valid email address so we can send your entry QR code.');
+    }
     setError('');
+    setSubmitting(true);
+    const { ok, data } = await apiPost('/api/rsvp', {
+      response: attending === 'yes' ? 'accept' : 'decline',
+      fullName: form.name,
+      phone: form.phone,
+      email: form.email,
+      dietary: form.dietary,
+      message: form.message,
+    });
+    setSubmitting(false);
+    if (!ok) {
+      setError(data?.error ?? 'Something went wrong. Please try again.');
+      return;
+    }
     setSubmitted(true);
   };
 
@@ -255,7 +274,7 @@ export default function RsvpPage() {
                 </div>
                 <div className="eb-field">
                   <label className="eb-field-lbl" htmlFor="fPhone">Phone</label>
-                  <input id="fPhone" type="tel" className="eb-input" placeholder="+251 …" autoComplete="tel" value={form.phone} onChange={set('phone')} />
+                  <input id="fPhone" type="tel" className="eb-input" placeholder="09xx xxx xxx" autoComplete="tel" value={form.phone} onChange={set('phone')} />
                 </div>
                 <div className="eb-field">
                   <label className="eb-field-lbl" htmlFor="fDietary">Dietary preferences</label>
@@ -270,7 +289,9 @@ export default function RsvpPage() {
 
               {error && <p className="eb-error">{error}</p>}
 
-              <button type="submit" className="eb-submit">Send my RSVP</button>
+              <button type="submit" className="eb-submit" disabled={submitting}>
+                {submitting ? 'Sending…' : 'Send my RSVP'}
+              </button>
             </form>
           ) : (
             <div className="eb-confirm">

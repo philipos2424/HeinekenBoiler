@@ -1,0 +1,50 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum RsvpResponse {
+  ACCEPTED
+  DECLINED
+}
+
+model Attendee {
+  id        String   @id @default(cuid())
+  fullName  String
+  phone     String   @unique
+  email     String?
+  dietary   String?
+  message   String?
+  createdAt DateTime @default(now())
+  blocked   Boolean  @default(false)
+
+  // null = submitted the form but the request never resolved to a choice
+  // (shouldn't normally happen, but kept nullable for safety).
+  response RsvpResponse?
+
+  checkedInAt        DateTime?
+  checkedInByStaffId String?
+  checkedInByStaff   StaffUser? @relation(fields: [checkedInByStaffId], references: [id], onDelete: SetNull)
+
+  confirmationEmailSentAt DateTime?
+  confirmationEmailError  String?
+
+  @@index([response])
+}
+
+// Scan-only staff accounts, created by the admin, restricted to the /scan
+// check-in flow. Distinct from the single shared admin password.
+model StaffUser {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  passwordHash String
+  passwordSalt String
+  createdAt    DateTime   @default(now())
+  checkins     Attendee[]
+}
