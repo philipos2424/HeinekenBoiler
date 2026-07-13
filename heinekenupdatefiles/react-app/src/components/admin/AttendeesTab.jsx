@@ -23,20 +23,28 @@ export default function AttendeesTab() {
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [resending, setResending] = useState(null);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async (searchTerm, filter, reset, cursorValue) => {
     setLoading(true);
+    setError(false);
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (filter !== 'ALL') params.set('response', filter);
     if (!reset && cursorValue) params.set('cursor', cursorValue);
-    const res = await fetch(`/api/admin/attendees?${params.toString()}`, { credentials: 'same-origin' });
-    const data = await res.json();
-    setAttendees((prev) => (reset ? data.attendees : [...prev, ...data.attendees]));
-    setCursor(data.nextCursor);
-    setHasMore(Boolean(data.nextCursor));
-    setTotal(data.total);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/admin/attendees?${params.toString()}`, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('Request failed');
+      const data = await res.json();
+      setAttendees((prev) => (reset ? data.attendees : [...prev, ...data.attendees]));
+      setCursor(data.nextCursor);
+      setHasMore(Boolean(data.nextCursor));
+      setTotal(data.total);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -138,8 +146,9 @@ export default function AttendeesTab() {
             ))}
           </tbody>
         </table>
-        {loading && attendees.length === 0 && <p className="ad-empty">Loading…</p>}
-        {!loading && attendees.length === 0 && <p className="ad-empty">No attendees found.</p>}
+        {error && <p className="ad-empty">Couldn't load attendees. Please refresh to try again.</p>}
+        {!error && loading && attendees.length === 0 && <p className="ad-empty">Loading…</p>}
+        {!error && !loading && attendees.length === 0 && <p className="ad-empty">No attendees found.</p>}
       </div>
 
       {hasMore && (

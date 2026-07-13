@@ -230,30 +230,37 @@ async function handleStaffDelete(req, res, id) {
 }
 
 export default async function handler(req, res) {
-  const segments = pathSegments(req, '/api/admin/');
-  const [first, second, third] = segments;
+  try {
+    const segments = pathSegments(req, '/api/admin/');
+    const [first, second, third] = segments;
 
-  // /login is the only public admin route — everything else needs a valid
-  // admin session, checked once here before dispatching.
-  if (first === 'login' && segments.length === 1) return handleLogin(req, res);
+    // /login is the only public admin route — everything else needs a valid
+    // admin session, checked once here before dispatching.
+    if (first === 'login' && segments.length === 1) return await handleLogin(req, res);
 
-  if (!(await requireAdmin(req, res))) return;
+    if (!(await requireAdmin(req, res))) return;
 
-  if (first === 'logout' && segments.length === 1) return handleLogout(req, res);
-  if (first === 'me' && segments.length === 1) return handleMe(req, res);
-  if (first === 'analytics' && segments.length === 1) return handleAnalytics(req, res);
+    if (first === 'logout' && segments.length === 1) return handleLogout(req, res);
+    if (first === 'me' && segments.length === 1) return handleMe(req, res);
+    if (first === 'analytics' && segments.length === 1) return await handleAnalytics(req, res);
 
-  if (first === 'attendees') {
-    if (segments.length === 1) return handleAttendeesList(req, res);
-    if (segments.length === 2 && second === 'export') return handleAttendeesExport(req, res);
-    if (segments.length === 2) return handleAttendeeById(req, res, second);
-    if (segments.length === 3 && third === 'resend-email') return handleResendEmail(req, res, second);
+    if (first === 'attendees') {
+      if (segments.length === 1) return await handleAttendeesList(req, res);
+      if (segments.length === 2 && second === 'export') return await handleAttendeesExport(req, res);
+      if (segments.length === 2) return await handleAttendeeById(req, res, second);
+      if (segments.length === 3 && third === 'resend-email') return await handleResendEmail(req, res, second);
+    }
+
+    if (first === 'staff') {
+      if (segments.length === 1) return await handleStaffList(req, res);
+      if (segments.length === 2) return await handleStaffDelete(req, res, second);
+    }
+
+    return res.status(404).json({ error: 'Not found' });
+  } catch (err) {
+    console.error('admin router error:', err);
+    if (!res.headersSent) {
+      return res.status(500).json({ error: err instanceof Error ? err.message : 'Internal server error' });
+    }
   }
-
-  if (first === 'staff') {
-    if (segments.length === 1) return handleStaffList(req, res);
-    if (segments.length === 2) return handleStaffDelete(req, res, second);
-  }
-
-  return res.status(404).json({ error: 'Not found' });
 }

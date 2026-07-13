@@ -99,14 +99,21 @@ async function handleCheckin(req, res, attendeeId) {
 }
 
 export default async function handler(req, res) {
-  const segments = pathSegments(req, '/api/scan/');
-  const [first, second] = segments;
+  try {
+    const segments = pathSegments(req, '/api/scan/');
+    const [first, second] = segments;
 
-  if (first === 'login' && segments.length === 1) return handleLogin(req, res);
-  if (first === 'logout' && segments.length === 1) return handleLogout(req, res);
-  if (first === 'me' && segments.length === 1) return handleMe(req, res);
-  if (first === 'search' && segments.length === 1) return handleSearch(req, res);
-  if (first === 'checkin' && segments.length === 2) return handleCheckin(req, res, second);
+    if (first === 'login' && segments.length === 1) return await handleLogin(req, res);
+    if (first === 'logout' && segments.length === 1) return handleLogout(req, res);
+    if (first === 'me' && segments.length === 1) return await handleMe(req, res);
+    if (first === 'search' && segments.length === 1) return await handleSearch(req, res);
+    if (first === 'checkin' && segments.length === 2) return await handleCheckin(req, res, second);
 
-  return res.status(404).json({ error: 'Not found' });
+    return res.status(404).json({ error: 'Not found' });
+  } catch (err) {
+    console.error('scan router error:', err);
+    if (!res.headersSent) {
+      return res.status(500).json({ error: err instanceof Error ? err.message : 'Internal server error' });
+    }
+  }
 }

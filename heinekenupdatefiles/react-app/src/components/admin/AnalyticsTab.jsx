@@ -60,13 +60,19 @@ function TrendChart({ trend }) {
 
 export default function AnalyticsTab() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/analytics', { credentials: 'same-origin' })
-      .then((res) => res.json())
-      .then(setData);
+      .then((res) => {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+      })
+      .then(setData)
+      .catch(() => setError(true));
   }, []);
 
+  if (error) return <p className="ad-empty">Couldn't load analytics. Please refresh to try again.</p>;
   if (!data) return <p className="ad-empty">Loading analytics…</p>;
 
   const { totals } = data;

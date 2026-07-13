@@ -8,13 +8,21 @@ export default function StaffTab() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   async function load() {
     setLoading(true);
-    const res = await fetch('/api/admin/staff', { credentials: 'same-origin' });
-    const data = await res.json();
-    setStaff(data.staff ?? []);
-    setLoading(false);
+    setLoadError(false);
+    try {
+      const res = await fetch('/api/admin/staff', { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('Request failed');
+      const data = await res.json();
+      setStaff(data.staff ?? []);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -85,8 +93,9 @@ export default function StaffTab() {
             ))}
           </tbody>
         </table>
-        {loading && staff.length === 0 && <p className="ad-empty">Loading…</p>}
-        {!loading && staff.length === 0 && <p className="ad-empty">No staff accounts yet.</p>}
+        {loadError && <p className="ad-empty">Couldn't load staff accounts. Please refresh to try again.</p>}
+        {!loadError && loading && staff.length === 0 && <p className="ad-empty">Loading…</p>}
+        {!loadError && !loading && staff.length === 0 && <p className="ad-empty">No staff accounts yet.</p>}
       </div>
     </div>
   );
