@@ -1,5 +1,6 @@
 /* ===================== base ===================== */
 * { box-sizing: border-box; }
+html { color-scheme: light; }
 html, body { margin: 0; padding: 0; }
 body { font-family: 'Instrument Sans', system-ui, sans-serif; color: #24291f; background: #04140b; -webkit-font-smoothing: antialiased; }
 a { color: #d9bd77; text-decoration: none; }
