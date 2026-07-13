@@ -8,13 +8,15 @@ export default function ScanDashboardPage() {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    fetch('/api/scan/me', { credentials: 'same-origin' }).then((res) => {
-      if (!res.ok) {
-        navigate('/scan/login');
-        return;
-      }
-      setAuthChecked(true);
-    });
+    fetch('/api/scan/me', { credentials: 'same-origin' })
+      .then((res) => {
+        if (!res.ok) {
+          navigate('/scan/login');
+          return;
+        }
+        setAuthChecked(true);
+      })
+      .catch(() => navigate('/scan/login'));
   }, [navigate]);
 
   async function logout() {
@@ -22,7 +24,7 @@ export default function ScanDashboardPage() {
     navigate('/scan/login');
   }
 
-  if (!authChecked) return null;
+  if (!authChecked) return <div className="sc-page sc-checking">Checking session…</div>;
 
   return (
     <div className="sc-page">

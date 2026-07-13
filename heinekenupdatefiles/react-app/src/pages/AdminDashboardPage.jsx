@@ -17,13 +17,15 @@ export default function AdminDashboardPage() {
   const [tab, setTab] = useState('analytics');
 
   useEffect(() => {
-    fetch('/api/admin/me', { credentials: 'same-origin' }).then((res) => {
-      if (!res.ok) {
-        navigate('/admin/login');
-        return;
-      }
-      setAuthChecked(true);
-    });
+    fetch('/api/admin/me', { credentials: 'same-origin' })
+      .then((res) => {
+        if (!res.ok) {
+          navigate('/admin/login');
+          return;
+        }
+        setAuthChecked(true);
+      })
+      .catch(() => navigate('/admin/login'));
   }, [navigate]);
 
   async function logout() {
@@ -31,7 +33,7 @@ export default function AdminDashboardPage() {
     navigate('/admin/login');
   }
 
-  if (!authChecked) return null;
+  if (!authChecked) return <div className="ad-page ad-checking">Checking session…</div>;
 
   return (
     <div className="ad-page">
