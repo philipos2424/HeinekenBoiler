@@ -4,6 +4,7 @@ import { verifyPassword } from '../_lib/password.js';
 import { createStaffSessionToken, staffCookieName, staffMaxAgeSeconds } from '../_lib/session.js';
 import { setCookie, clearCookie } from '../_lib/cookies.js';
 import { rateLimit, clientIp } from '../_lib/rate-limit.js';
+import { pathSegments } from '../_lib/route-segments.js';
 
 // Same reasoning as api/admin/[...path].js: one catch-all function instead of
 // five separate route files, to stay under Vercel's per-deployment function cap.
@@ -98,12 +99,8 @@ async function handleCheckin(req, res, attendeeId) {
 }
 
 export default async function handler(req, res) {
-  const segments = Array.isArray(req.query.path) ? req.query.path : req.query.path ? [req.query.path] : [];
+  const segments = pathSegments(req, '/api/scan/');
   const [first, second] = segments;
-
-  if (req.query.__debug === '1') {
-    return res.status(200).json({ url: req.url, method: req.method, query: req.query, segments });
-  }
 
   if (first === 'login' && segments.length === 1) return handleLogin(req, res);
   if (first === 'logout' && segments.length === 1) return handleLogout(req, res);

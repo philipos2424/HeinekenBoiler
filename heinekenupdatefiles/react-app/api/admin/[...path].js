@@ -6,6 +6,7 @@ import { setCookie, clearCookie } from '../_lib/cookies.js';
 import { rateLimit, clientIp } from '../_lib/rate-limit.js';
 import { hashPassword } from '../_lib/password.js';
 import { sendConfirmationEmail } from '../_lib/mailer.js';
+import { pathSegments } from '../_lib/route-segments.js';
 
 // Vercel Hobby plan caps a deployment at 12 serverless functions. The admin
 // area alone used to be 10 separate route files, so everything under
@@ -229,12 +230,8 @@ async function handleStaffDelete(req, res, id) {
 }
 
 export default async function handler(req, res) {
-  const segments = Array.isArray(req.query.path) ? req.query.path : req.query.path ? [req.query.path] : [];
+  const segments = pathSegments(req, '/api/admin/');
   const [first, second, third] = segments;
-
-  if (req.query.__debug === '1') {
-    return res.status(200).json({ url: req.url, method: req.method, query: req.query, segments });
-  }
 
   // /login is the only public admin route — everything else needs a valid
   // admin session, checked once here before dispatching.
